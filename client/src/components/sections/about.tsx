@@ -17,11 +17,10 @@ export default function About() {
           <div className="space-y-8">
             <div className="text-gray-300 text-lg leading-relaxed space-y-4">
               <p>
-                Currently pursuing my second year of B.Tech at BML Munjal University, I
-                am passionate about developing my skills in Cyber Security and Full Stack
-                Development. Eager to learn, explore, and grow in the field, I am
-                constantly working towards building a strong foundation for a career in
-                cybersecurity.
+                Currently pursuing my third year of B.Tech at BML Munjal University, I
+                am passionate about developing my skills and eager to learn, explore, and grow 
+                in the field, I am constantly working towards building a strong foundation 
+                for a career in cybersecurity.
               </p>
               <p>
                 Motivated individual passionate in exploring emerging technologies,

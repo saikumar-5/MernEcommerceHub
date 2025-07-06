@@ -26,15 +26,16 @@ export default function Skills() {
     { name: "JavaScript", level: "experienced", color: "bg-yellow-500" },
     { name: "C", level: "experienced", color: "bg-yellow-500" },
     { name: "C++", level: "experienced", color: "bg-yellow-500" },
+    { name: "React", level: "experienced", color: "bg-yellow-500" },
     { name: "R Programming", level: "familiar", color: "bg-blue-500" }
   ];
 
   const cybersecuritySkills: VerifiedSkill[] = [
-    { name: "Malware Analysis", verified: true },
-    { name: "Intrusion Detection", verified: true },
-    { name: "Network Security", verified: true },
-    { name: "Threat Analysis", verified: true },
-    { name: "Security Frameworks", verified: true }
+    { name: "Static Malware Analysis", verified: true },
+    { name: "Fail2Ban", verified: true },
+    // { name: "Network Security", verified: true },
+    // { name: "Threat Analysis", verified: true },
+    // { name: "Security Frameworks", verified: true }
   ];
 
   const librarySkills: VerifiedSkill[] = [

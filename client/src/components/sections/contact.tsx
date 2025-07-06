@@ -36,9 +36,11 @@ export default function Contact() {
 
   const contactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      return apiRequest("POST", "/api/contacts", data);
+      const response = await apiRequest("POST", "/api/contacts", data);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("Contact form submitted successfully:", data);
       form.reset();
       toast({
         title: "Message sent successfully!",
@@ -47,15 +49,17 @@ export default function Contact() {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
     },
     onError: (error) => {
+      console.error("Contact form error:", error);
       toast({
         title: "Failed to send message",
-        description: "Please try again later or contact me directly.",
+        description: error.message || "Please try again later or contact me directly.",
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: ContactFormData) => {
+    console.log("Submitting contact form:", data);
     contactMutation.mutate(data);
   };
 
@@ -75,12 +79,12 @@ export default function Contact() {
             <div>
               <h3 className="text-2xl font-bold text-white mb-6">Let's Connect</h3>
               <p className="text-gray-400 leading-relaxed mb-8">
-                I'm always interested in discussing new opportunities, innovative projects, or just having a conversation about cybersecurity and technology.
+                I'm always interested in discussing new opportunities, innovative projects, or just having a conversation.
               </p>
             </div>
 
             <div className="space-y-6">
-              <div className="flex items-center gap-4">
+              {/* <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-[#00d9ff]/10 rounded-lg flex items-center justify-center">
                   <Mail className="w-6 h-6 text-[#00d9ff]" />
                 </div>
@@ -88,9 +92,9 @@ export default function Contact() {
                   <h4 className="text-white font-semibold">Email</h4>
                   <p className="text-gray-400">Available via contact form</p>
                 </div>
-              </div>
+              </div> */}
 
-              <div className="flex items-center gap-4">
+              {/* <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-[#00d9ff]/10 rounded-lg flex items-center justify-center">
                   <MapPin className="w-6 h-6 text-[#00d9ff]" />
                 </div>
@@ -98,7 +102,7 @@ export default function Contact() {
                   <h4 className="text-white font-semibold">Location</h4>
                   <p className="text-gray-400">Gurugram, Haryana, India</p>
                 </div>
-              </div>
+              </div> */}
 
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-[#00d9ff]/10 rounded-lg flex items-center justify-center">
@@ -106,7 +110,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <h4 className="text-white font-semibold">Response Time</h4>
-                  <p className="text-gray-400">Usually within 24 hours</p>
+                  <p className="text-gray-400">within 24 hours</p>
                 </div>
               </div>
             </div>
@@ -116,22 +120,41 @@ export default function Contact() {
           <div>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <input
-                          {...field}
-                          className="w-full bg-gray-800/30 border border-gray-700 text-white p-3 rounded-lg placeholder-gray-500 focus:border-[#00d9ff] focus:outline-none"
-                          placeholder="Name"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <input
+                            {...field}
+                            className="w-full bg-gray-800/30 border border-gray-700 text-white p-3 rounded-lg placeholder-gray-500 focus:border-[#00d9ff] focus:outline-none"
+                            placeholder="First Name"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <input
+                            {...field}
+                            className="w-full bg-gray-800/30 border border-gray-700 text-white p-3 rounded-lg placeholder-gray-500 focus:border-[#00d9ff] focus:outline-none"
+                            placeholder="Last Name"
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 <FormField
                   control={form.control}

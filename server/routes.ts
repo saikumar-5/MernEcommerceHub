@@ -1,10 +1,16 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { emailService } from "./emailService";
 import { insertProjectSchema, insertCommentSchema, insertContactSchema, insertExperienceSchema } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Test endpoint
+  app.get("/api/test", (req, res) => {
+    res.json({ message: "Server is running!" });
+  });
+
   // Analytics - increment visitors on any page load
   app.post("/api/analytics/visit", async (req, res) => {
     try {
@@ -199,7 +205,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertContactSchema.parse(req.body);
       const contact = await storage.createContact(validatedData);
-      res.status(201).json(contact);
+      console.log('[Contact] Saved to DB:', contact);
+      
+      // Send email notification to you
+      const recipientEmail = process.env.CONTACT_EMAIL || "your-email@gmail.com";
+      const emailSent = await emailService.sendContactEmail(validatedData, recipientEmail);
+      if (emailSent) {
+        console.log('[Contact] Notification email sent to', recipientEmail);
+      } else {
+        console.warn('[Contact] Failed to send notification email to', recipientEmail);
+      }
+      
+      // Send auto-reply to the sender
+      const autoReplySent = await emailService.sendAutoReply(validatedData);
+      if (autoReplySent) {
+        console.log('[Contact] Auto-reply sent to', validatedData.email);
+      } else {
+        console.warn('[Contact] Failed to send auto-reply to', validatedData.email);
+      }
+      
+      res.status(201).json({
+        ...contact,
+        emailSent,
+        autoReplySent
+      });
     } catch (error) {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: "Invalid contact data", errors: error.errors });

@@ -111,7 +111,7 @@ export default function Footer() {
               <span className="text-sm font-medium">Like</span>
             </button>
             
-            <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
+            {/* <Dialog open={isCommentDialogOpen} onOpenChange={setIsCommentDialogOpen}>
               <DialogTrigger asChild>
                 <button className="flex flex-col items-center gap-2 text-gray-400 hover:text-[#00d9ff] transition-colors">
                   <div className="w-16 h-16 border-2 border-gray-600 rounded-full flex items-center justify-center hover:border-[#00d9ff] transition-colors">
@@ -199,7 +199,7 @@ export default function Footer() {
                   </form>
                 </Form>
               </DialogContent>
-            </Dialog>
+            </Dialog> */}
           </div>
         </div>
 
@@ -211,15 +211,30 @@ export default function Footer() {
             </div>
             
             <div className="flex items-center gap-4">
-              <button className="text-gray-400 hover:text-white transition-colors">
+              <a
+                href="https://www.linkedin.com/in/sai-kumar-pamoti-b67118298/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
                 <Linkedin className="w-5 h-5" />
-              </button>
-              <button className="text-gray-400 hover:text-white transition-colors">
+              </a>
+              <a
+                href="https://github.com/saikumar-5"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
                 <Github className="w-5 h-5" />
-              </button>
-              <button className="text-gray-400 hover:text-white transition-colors">
+              </a>
+              <a
+                href="https://leetcode.com/u/saikumar_5050/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
                 <Code className="w-5 h-5" />
-              </button>
+              </a>
             </div>
           </div>
         </div>

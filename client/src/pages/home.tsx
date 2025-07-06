@@ -5,8 +5,8 @@ import About from "@/components/sections/about";
 import Projects from "@/components/sections/projects";
 import Experience from "@/components/sections/experience";
 import Skills from "@/components/sections/skills";
-import Contact from "@/components/sections/contact";
-import Comments from "@/components/sections/comments";
+// import Contact from "@/components/sections/contact";
+// import Comments from "@/components/sections/comments";
 
 export default function Home() {
   return (
@@ -19,8 +19,8 @@ export default function Home() {
         <Experience />
         <Projects />
         <Skills />
-        <Contact />
-        <Comments />
+        {/* <Contact />
+        <Comments /> */}
       </main>
       
       <Footer />

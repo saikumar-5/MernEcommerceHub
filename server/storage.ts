@@ -7,6 +7,7 @@ import {
   type Experience, type InsertExperience,
   type Analytics
 } from "@shared/schema";
+import { db } from './db';
 
 export interface IStorage {
   // Users
@@ -339,9 +340,7 @@ export class MemStorage implements IStorage {
 
   // Contacts
   async getAllContacts(): Promise<Contact[]> {
-    return Array.from(this.contacts.values()).sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    return await db.select().from(contacts).orderBy(contacts.createdAt);
   }
 
   async createContact(insertContact: InsertContact): Promise<Contact> {
@@ -433,4 +432,44 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+class DbStorage implements IStorage {
+  private mem = new MemStorage();
+
+  // Contacts
+  async getAllContacts(): Promise<Contact[]> {
+    return await db.select().from(contacts).orderBy(contacts.createdAt);
+  }
+
+  async createContact(insertContact: InsertContact): Promise<Contact> {
+    const [contact] = await db.insert(contacts).values(insertContact).returning();
+    return contact;
+  }
+
+  // Delegate all other methods to MemStorage for now
+  getUser = this.mem.getUser.bind(this.mem);
+  getUserByUsername = this.mem.getUserByUsername.bind(this.mem);
+  createUser = this.mem.createUser.bind(this.mem);
+  getAllProjects = this.mem.getAllProjects.bind(this.mem);
+  getProjectsByCategory = this.mem.getProjectsByCategory.bind(this.mem);
+  createProject = this.mem.createProject.bind(this.mem);
+  updateProject = this.mem.updateProject.bind(this.mem);
+  deleteProject = this.mem.deleteProject.bind(this.mem);
+  likeProject = this.mem.likeProject.bind(this.mem);
+  getAllComments = this.mem.getAllComments.bind(this.mem);
+  getApprovedComments = this.mem.getApprovedComments.bind(this.mem);
+  createComment = this.mem.createComment.bind(this.mem);
+  approveComment = this.mem.approveComment.bind(this.mem);
+  deleteComment = this.mem.deleteComment.bind(this.mem);
+  likeComment = this.mem.likeComment.bind(this.mem);
+  markContactAsRead = this.mem.markContactAsRead.bind(this.mem);
+  deleteContact = this.mem.deleteContact.bind(this.mem);
+  getAllExperiences = this.mem.getAllExperiences.bind(this.mem);
+  createExperience = this.mem.createExperience.bind(this.mem);
+  updateExperience = this.mem.updateExperience.bind(this.mem);
+  deleteExperience = this.mem.deleteExperience.bind(this.mem);
+  getAnalytics = this.mem.getAnalytics.bind(this.mem);
+  updateAnalytics = this.mem.updateAnalytics.bind(this.mem);
+  incrementVisitors = this.mem.incrementVisitors.bind(this.mem);
+}
+
+export const storage = new DbStorage();

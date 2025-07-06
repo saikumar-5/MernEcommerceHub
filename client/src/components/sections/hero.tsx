@@ -44,9 +44,9 @@ export default function Hero() {
 
   const handleSocialClick = (platform: string) => {
     const urls = {
-      linkedin: "https://www.linkedin.com/in/saikumar-pamoti",
-      github: "https://github.com/saikumar-pamoti", 
-      leetcode: "https://leetcode.com/saikumar-pamoti"
+      linkedin: "https://www.linkedin.com/in/sai-kumar-pamoti-b67118298/",
+      github: "https://github.com/saikumar-5", 
+      leetcode: "https://leetcode.com/u/saikumar_5050/"
     };
     window.open(urls[platform as keyof typeof urls], "_blank");
   };
@@ -57,10 +57,10 @@ export default function Hero() {
         <div className="animate-slide-up">
           {/* Animated Terminal prompt with name */}
           <div className="mb-8 h-16 flex items-center justify-center">
-            <span className="text-[#00d9ff] text-3xl md:text-4xl font-mono">
+            <span className="text-[#00d9ff] text-5xl md:text-7xl font-mono">
               &gt; {currentText}
             </span>
-            <span className="animate-pulse ml-1 text-[#00d9ff] text-3xl md:text-4xl">_</span>
+            <span className="animate-pulse ml-1 text-[#00d9ff] text-5xl md:text-7xl">_</span>
           </div>
 
           {/* Subtitle */}

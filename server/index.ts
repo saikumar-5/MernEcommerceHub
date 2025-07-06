@@ -2,6 +2,29 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 
+// Load environment variables from .env file if it exists
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+try {
+  const envPath = join(process.cwd(), '.env');
+  const envContent = readFileSync(envPath, 'utf8');
+  const envVars = envContent.split('\n').filter(line => line.trim() && !line.startsWith('#'));
+  
+  envVars.forEach(line => {
+    const [key, ...valueParts] = line.split('=');
+    if (key && valueParts.length > 0) {
+      const value = valueParts.join('=').trim();
+      if (!process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  });
+} catch (error) {
+  // .env file doesn't exist, which is fine
+  console.log('No .env file found, using default environment variables');
+}
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

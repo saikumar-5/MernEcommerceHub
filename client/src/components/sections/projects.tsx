@@ -10,10 +10,12 @@ export default function Projects() {
       title: "PHISHX",
       category: "Security",
       description: "Phishing Detection Extension",
-      fullDescription: "Developed a browser extension that extracts and analyzes URLs using a Flask-based backend and XGBoost ML model (97% accuracy) to detect phishing websites with real-time predictions.",
+      fullDescription: "Developed a browser extension that extracts and analyzes URLs using a Flask-based backend and XGBoost ML model to detect phishing websites with real-time predictions.",
       technologies: ["Python", "Flask", "XGBoost", "ML"],
-      badge: "97% Accuracy",
-      badgeColor: "bg-red-500/20 text-red-400 border-red-500/30"
+      badge: "Extension",
+      badgeColor: "bg-red-500/20 text-red-400 border-red-500/30",
+      githubUrl: "https://github.com/saikumar-5/PhishX",
+      // liveUrl: "https://phishx-demo.vercel.app"
     },
     {
       id: 2,
@@ -22,18 +24,22 @@ export default function Projects() {
       description: "Online Marketplace",
       fullDescription: "Developed a full-stack e-commerce marketplace connecting farmers with customers, featuring custom dashboards for real-time tracking of sales and transactions.",
       technologies: ["HTML", "CSS", "JavaScript", "Node.js", "MongoDB"],
-      badge: "Full Stack MERN",
-      badgeColor: "bg-green-500/20 text-green-400 border-green-500/30"
+      badge: "Full Stack",
+      badgeColor: "bg-green-500/20 text-green-400 border-green-500/30",
+      githubUrl: "https://github.com/abhiram1206/agrimart",
+      // liveUrl: "https://agrimart.vercel.app"
     },
     {
       id: 3,
-      title: "AGRIMART MOBILE",
+      title: "AGRIMART (Android)",
       category: "Mobile App",
       description: "Android E-commerce App",
       fullDescription: "Developed an Android application for AgriMart marketplace using XML for UI design and Java for backend integration, featuring responsive design and seamless user experience.",
       technologies: ["Android Studio", "XML", "Java", "API Integration"],
       badge: "Native Android",
-      badgeColor: "bg-purple-500/20 text-purple-400 border-purple-500/30"
+      badgeColor: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+      githubUrl: "https://github.com/saikumar-5/Agrimart-Farmers-Panel",
+      // liveUrl: null // No live demo for Android app
     },
     {
       id: 4,
@@ -43,7 +49,9 @@ export default function Projects() {
       fullDescription: "Conducting comprehensive research on vehicle gear materials utilizing nanoindentation test results analyzed through Python and Data Analysis techniques with ML models.",
       technologies: ["Python", "Data Analysis", "Machine Learning", "Statistics"],
       badge: "Ongoing",
-      badgeColor: "bg-blue-500/20 text-blue-400 border-blue-500/30"
+      badgeColor: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+      // githubUrl: "https://github.com/yourusername/nano-mechanical-analysis",
+      // liveUrl: null // Research project, no live demo
     }
   ];
 
@@ -100,14 +108,28 @@ export default function Projects() {
 
                 {/* Project Links */}
                 <div className="flex gap-3">
-                  <button className="flex items-center gap-2 text-gray-400 hover:text-[#00d9ff] transition-colors text-sm">
-                    <Github className="w-4 h-4" />
-                    <span>Code</span>
-                  </button>
-                  <button className="flex items-center gap-2 text-gray-400 hover:text-[#00d9ff] transition-colors text-sm">
-                    <ExternalLink className="w-4 h-4" />
-                    <span>Live Demo</span>
-                  </button>
+                  {project.githubUrl && (
+                    <a 
+                      href={project.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-gray-400 hover:text-[#00d9ff] transition-colors text-sm"
+                    >
+                      <Github className="w-4 h-4" />
+                      <span>Code</span>
+                    </a>
+                  )}
+                  {/* {project.liveUrl && (
+                    <a 
+                      href={project.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-gray-400 hover:text-[#00d9ff] transition-colors text-sm"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>Live Demo</span>
+                    </a>
+                  )} */}
                 </div>
               </CardContent>
             </Card>
