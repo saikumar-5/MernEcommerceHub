@@ -51,56 +51,41 @@ export default function ExperienceSection() {
                 {/* Timeline dot */}
                 <div className="absolute left-6 w-4 h-4 bg-[#00d9ff] rounded-full border-4 border-[#0a0f1c]"></div>
 
-                {/* Content */}
+                {/* Content - Always left aligned */}
                 <div className="ml-20">
-                  <Card className="bg-gray-800/30 border-gray-700 hover:border-[#00d9ff]/50 transition-colors">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
-                        <div>
-                          <h3 className="text-xl font-bold text-[#00d9ff] mb-2">
-                            {experience.position}
-                          </h3>
-                          <h4 className="text-lg text-white mb-2">
-                            {experience.company}
-                          </h4>
-                        </div>
-                        
-                        <div className="flex flex-col lg:items-end space-y-2">
-                          <div className="flex items-center gap-2 text-gray-400">
-                            <Calendar className="w-4 h-4" />
-                            <span>
-                              {experience.startDate} - {experience.endDate || "Present"}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-gray-400">
-                            <MapPin className="w-4 h-4" />
-                            <span>Remote</span>
-                          </div>
-                          {!experience.endDate && (
-                            <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
-                              Current
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
+                  <div className="text-left">
+                    <h3 className="text-xl font-bold text-[#00d9ff] mb-2">
+                      {experience.position}
+                    </h3>
+                    <h4 className="text-lg text-white mb-1">
+                      {experience.company}
+                    </h4>
+                    <div className="text-sm text-gray-400 mb-3">
+                      {experience.startDate} - {experience.endDate || "Present"} • {experience.endDate || "Present"} • Remote
+                    </div>
+                    
+                    <p className="text-gray-300 mb-4 leading-relaxed">
+                      {experience.description}
+                    </p>
 
-                      <p className="text-gray-300 mb-4 leading-relaxed">
-                        {experience.description}
-                      </p>
+                    {!experience.endDate && (
+                      <Badge className="bg-green-500/20 text-green-400 border-green-500/50 mb-4">
+                        Current
+                      </Badge>
+                    )}
 
-                      <div className="flex flex-wrap gap-2">
-                        {experience.technologies.map((tech) => (
-                          <Badge
-                            key={tech}
-                            variant="outline"
-                            className="text-gray-300 border-gray-600 bg-gray-700/50"
-                          >
-                            {tech}
-                          </Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    <div className="flex flex-wrap gap-2">
+                      {experience.technologies.map((tech) => (
+                        <Badge
+                          key={tech}
+                          variant="outline"
+                          className="text-gray-300 border-gray-600 bg-gray-700/50 text-xs"
+                        >
+                          {tech}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}

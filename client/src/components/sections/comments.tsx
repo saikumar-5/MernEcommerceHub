@@ -1,275 +1,201 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { insertCommentSchema } from "@shared/schema";
-import type { Comment } from "@shared/schema";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Heart, MessageSquare } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { MessageCircle, Send, User, Briefcase } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
-
-const commentFormSchema = insertCommentSchema.extend({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Please enter a valid email"),
-  content: z.string().min(5, "Comment must be at least 5 characters"),
-});
-
-type CommentFormData = z.infer<typeof commentFormSchema>;
+import type { Comment } from "@/../../shared/schema";
 
 export default function Comments() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  const [formData, setFormData] = useState<CommentFormData>({
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
     name: "",
-    email: "",
-    content: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-
-  const { data: comments, isLoading } = useQuery<Comment[]>({
-    queryKey: ["/api/comments", { approved: "true" }],
+    profession: "",
+    comment: ""
   });
 
-  const createCommentMutation = useMutation({
-    mutationFn: async (data: CommentFormData) => {
-      const response = await apiRequest("POST", "/api/comments", data);
-      return response.json();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Get approved comments only
+  const { data: comments = [], isLoading } = useQuery<Comment[]>({
+    queryKey: ["/api/comments/approved"],
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: async (data: { name: string; profession: string; comment: string }) => {
+      return apiRequest("POST", "/api/comments", {
+        name: data.name,
+        email: `${data.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+        profession: data.profession,
+        comment: data.comment
+      });
     },
     onSuccess: () => {
       toast({
-        title: "Comment submitted!",
-        description: "Your comment has been submitted for moderation. Thank you!",
+        title: "Comment Submitted!",
+        description: "Your comment has been submitted for review and will appear once approved.",
+        variant: "default",
       });
-      setFormData({ name: "", email: "", content: "" });
-      setErrors({});
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit comment. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const likeCommentMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest("POST", `/api/comments/${id}/like`);
-      return response.json();
-    },
-    onSuccess: () => {
+      setFormData({ name: "", profession: "", comment: "" });
+      setIsDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["/api/comments"] });
-      toast({ title: "Thanks for the like! ❤️" });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to like comment",
+        description: "Failed to submit comment. Please try again.",
         variant: "destructive",
       });
     },
   });
-
-  const handleInputChange = (field: keyof CommentFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    try {
-      const validatedData = commentFormSchema.parse(formData);
-      createCommentMutation.mutate(validatedData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            newErrors[err.path[0] as string] = err.message;
-          }
-        });
-        setErrors(newErrors);
-      }
+    if (!formData.name.trim() || !formData.profession.trim() || !formData.comment.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all fields.",
+        variant: "destructive",
+      });
+      return;
     }
-  };
-
-  const formatTimeAgo = (date: string | Date) => {
-    const now = new Date();
-    const past = new Date(date);
-    const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return "Just now";
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)} weeks ago`;
-    return `${Math.floor(diffInSeconds / 2592000)} months ago`;
-  };
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+    submitMutation.mutate(formData);
   };
 
   return (
-    <section className="py-20 bg-card">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="comments" className="py-20 bg-gray-900/50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-primary mb-4">Visitor Feedback</h2>
-          <p className="text-lg text-muted-foreground">What people are saying about my work</p>
-        </div>
-
-        {/* Add Comment Form */}
-        <Card className="bg-background border-border mb-8">
-          <CardHeader>
-            <CardTitle className="text-foreground">Leave a Comment</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="name" className="text-foreground">
-                    Your Name
-                  </Label>
-                  <Input
-                    id="name"
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="Your Name"
-                    className={`mt-1 ${errors.name ? "border-destructive" : ""}`}
-                  />
-                  {errors.name && (
-                    <p className="text-destructive text-sm mt-1">{errors.name}</p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="email" className="text-foreground">
-                    Your Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder="Your Email"
-                    className={`mt-1 ${errors.email ? "border-destructive" : ""}`}
-                  />
-                  {errors.email && (
-                    <p className="text-destructive text-sm mt-1">{errors.email}</p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="content" className="text-foreground">
-                  Comment
-                </Label>
-                <Textarea
-                  id="content"
-                  value={formData.content}
-                  onChange={(e) => handleInputChange("content", e.target.value)}
-                  placeholder="Share your thoughts..."
-                  rows={3}
-                  className={`mt-1 resize-none ${errors.content ? "border-destructive" : ""}`}
-                />
-                {errors.content && (
-                  <p className="text-destructive text-sm mt-1">{errors.content}</p>
-                )}
-              </div>
-              <Button
-                type="submit"
-                disabled={createCommentMutation.isPending}
-                className="bg-primary hover:bg-primary/90"
+          <h2 className="text-4xl font-bold text-[#00d9ff] mb-4">
+            Comments
+          </h2>
+          <p className="text-xl text-gray-400 mb-8">
+            What people are saying
+          </p>
+          
+          {/* Comment Button */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                className="bg-[#00d9ff] hover:bg-[#00b8e6] text-black px-6 py-3 rounded-lg font-semibold"
               >
-                {createCommentMutation.isPending ? "Posting..." : "Post Comment"}
+                <MessageCircle className="w-5 h-5 mr-2" />
+                Leave a Comment
               </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Comments List */}
-        <div className="space-y-6">
-          {isLoading ? (
-            [...Array(3)].map((_, i) => (
-              <Card key={i} className="bg-background border-border">
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-4">
-                    <Skeleton className="w-10 h-10 rounded-full" />
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <Skeleton className="h-4 w-24 mb-1" />
-                          <Skeleton className="h-3 w-16" />
-                        </div>
-                        <Skeleton className="h-8 w-16" />
-                      </div>
-                      <Skeleton className="h-4 w-full mb-2" />
-                      <Skeleton className="h-4 w-3/4" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : comments && comments.length > 0 ? (
-            comments.map((comment) => (
-              <Card key={comment.id} className="bg-background border-border">
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-4">
-                    <Avatar className="w-10 h-10">
-                      <AvatarFallback className="bg-primary text-white text-sm font-bold">
-                        {getInitials(comment.name)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <div>
-                          <h4 className="font-semibold text-foreground">{comment.name}</h4>
-                          <span className="text-muted-foreground text-sm">
-                            {formatTimeAgo(comment.createdAt)}
-                          </span>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => likeCommentMutation.mutate(comment.id)}
-                          disabled={likeCommentMutation.isPending}
-                          className="flex items-center space-x-2 text-muted-foreground hover:text-red-500 transition-colors"
-                        >
-                          <Heart className="h-4 w-4" />
-                          <span className="text-sm">{comment.likes}</span>
-                        </Button>
-                      </div>
-                      <p className="text-foreground leading-relaxed">{comment.content}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          ) : (
-            <Card className="bg-background border-border">
-              <CardContent className="p-12">
-                <div className="text-center">
-                  <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No comments yet</h3>
-                  <p className="text-muted-foreground">Be the first to leave a comment!</p>
+            </DialogTrigger>
+            <DialogContent className="bg-gray-800 border-gray-700 text-white max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-[#00d9ff]">Leave a Comment</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <User className="w-4 h-4 inline mr-2" />
+                    Your Name
+                  </label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter your name"
+                    className="bg-gray-700 border-gray-600 text-white"
+                    required
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          )}
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <Briefcase className="w-4 h-4 inline mr-2" />
+                    Your Profession
+                  </label>
+                  <Input
+                    value={formData.profession}
+                    onChange={(e) => setFormData(prev => ({ ...prev, profession: e.target.value }))}
+                    placeholder="e.g., Software Engineer, Designer"
+                    className="bg-gray-700 border-gray-600 text-white"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <MessageCircle className="w-4 h-4 inline mr-2" />
+                    Your Comment
+                  </label>
+                  <Textarea
+                    value={formData.comment}
+                    onChange={(e) => setFormData(prev => ({ ...prev, comment: e.target.value }))}
+                    placeholder="Share your thoughts..."
+                    rows={4}
+                    className="bg-gray-700 border-gray-600 text-white"
+                    required
+                  />
+                </div>
+                
+                <Button 
+                  type="submit" 
+                  disabled={submitMutation.isPending}
+                  className="w-full bg-[#00d9ff] hover:bg-[#00b8e6] text-black"
+                >
+                  {submitMutation.isPending ? (
+                    "Submitting..."
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Submit Comment
+                    </>
+                  )}
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
+
+        {/* Comments Display */}
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-32 bg-gray-800/30 rounded-lg"></div>
+              </div>
+            ))}
+          </div>
+        ) : comments.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {comments.map((comment) => (
+              <Card key={comment.id} className="bg-gray-800/30 border-gray-700 hover:border-[#00d9ff]/50 transition-colors">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <h4 className="font-semibold text-white">{comment.name}</h4>
+                      <p className="text-sm text-gray-400">{comment.profession}</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs text-green-400 border-green-500/50">
+                      Verified
+                    </Badge>
+                  </div>
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    "{comment.comment}"
+                  </p>
+                  <div className="mt-4 text-xs text-gray-500">
+                    {new Date(comment.createdAt).toLocaleDateString()}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <MessageCircle className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400 text-lg">No comments yet. Be the first to share your thoughts!</p>
+          </div>
+        )}
       </div>
     </section>
   );

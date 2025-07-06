@@ -1,9 +1,40 @@
+import { useState, useEffect } from "react";
 import { ChevronDown, Github, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SiLeetcode } from "react-icons/si";
 
 export default function Hero() {
+  const [currentText, setCurrentText] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [typingSpeed, setTypingSpeed] = useState(150);
+
+  const fullText = "Sai Kumar Pamoti";
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    const handleType = () => {
+      if (!isDeleting && currentText === fullText) {
+        timer = setTimeout(() => setIsDeleting(true), 2000);
+      } else if (isDeleting && currentText === '') {
+        setIsDeleting(false);
+        setTypingSpeed(150);
+        timer = setTimeout(handleType, 500);
+      } else {
+        setCurrentText(isDeleting 
+          ? fullText.substring(0, currentText.length - 1)
+          : fullText.substring(0, currentText.length + 1)
+        );
+        setTypingSpeed(isDeleting ? 50 : 150);
+        timer = setTimeout(handleType, typingSpeed);
+      }
+    };
+
+    timer = setTimeout(handleType, typingSpeed);
+    return () => clearTimeout(timer);
+  }, [currentText, isDeleting, typingSpeed, fullText]);
+
   const handleScrollToSection = (sectionId: string) => {
     const element = document.querySelector(sectionId);
     if (element) {
@@ -12,24 +43,25 @@ export default function Hero() {
   };
 
   const handleSocialClick = (platform: string) => {
-    console.log(`Navigate to ${platform} profile`);
+    const urls = {
+      linkedin: "https://www.linkedin.com/in/saikumar-pamoti",
+      github: "https://github.com/saikumar-pamoti", 
+      leetcode: "https://leetcode.com/saikumar-pamoti"
+    };
+    window.open(urls[platform as keyof typeof urls], "_blank");
   };
 
   return (
     <section id="home" className="min-h-screen flex items-center justify-center relative bg-[#0a0f1c]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
         <div className="animate-slide-up">
-          {/* Terminal prompt with name */}
-          <div className="mb-8">
-            <span className="text-[#00d9ff] text-xl font-mono">
-              &gt; Sai Kumar Pamoti
+          {/* Animated Terminal prompt with name */}
+          <div className="mb-8 h-16 flex items-center justify-center">
+            <span className="text-[#00d9ff] text-3xl md:text-4xl font-mono">
+              &gt; {currentText}
             </span>
+            <span className="animate-pulse ml-1 text-[#00d9ff] text-3xl md:text-4xl">_</span>
           </div>
-
-          {/* Main title */}
-          <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 text-white">
-            Sai Kumar Pamoti
-          </h1>
 
           {/* Subtitle */}
           <div className="text-xl sm:text-2xl lg:text-3xl text-gray-400 mb-8">

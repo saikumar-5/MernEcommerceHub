@@ -167,7 +167,8 @@ export class MemStorage implements IStorage {
         id: this.currentId++,
         name: "Jane Smith",
         email: "jane@example.com",
-        content: "Amazing portfolio! The design is clean and the projects showcase impressive technical skills. Looking forward to seeing more of your work.",
+        profession: "Software Engineer",
+        comment: "Amazing portfolio! The design is clean and the projects showcase impressive technical skills. Looking forward to seeing more of your work.",
         likes: 5,
         isApproved: true,
         createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
@@ -176,7 +177,8 @@ export class MemStorage implements IStorage {
         id: this.currentId++,
         name: "Mike Davis",
         email: "mike@example.com",
-        content: "Solid MERN stack implementation. The attention to detail in the UI/UX design is impressive. Would love to collaborate on a project!",
+        profession: "Full Stack Developer",
+        comment: "Solid MERN stack implementation. The attention to detail in the UI/UX design is impressive. Would love to collaborate on a project!",
         likes: 12,
         isApproved: true,
         createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 1 week ago
@@ -185,7 +187,8 @@ export class MemStorage implements IStorage {
         id: this.currentId++,
         name: "Anna Lee",
         email: "anna@example.com",
-        content: "Great work on the responsive design! The portfolio looks fantastic on mobile devices. Keep up the excellent work!",
+        profession: "UX Designer",
+        comment: "Great work on the responsive design! The portfolio looks fantastic on mobile devices. Keep up the excellent work!",
         likes: 8,
         isApproved: true,
         createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 2 weeks ago
@@ -286,8 +289,11 @@ export class MemStorage implements IStorage {
   async createComment(insertComment: InsertComment): Promise<Comment> {
     const id = this.currentId++;
     const comment: Comment = {
-      ...insertComment,
       id,
+      name: insertComment.name,
+      email: insertComment.email,
+      profession: insertComment.profession || null,
+      comment: insertComment.comment,
       likes: 0,
       isApproved: false,
       createdAt: new Date(),

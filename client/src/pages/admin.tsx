@@ -1,357 +1,427 @@
+import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import type { Analytics, Comment, Contact } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Users, MessageSquare, Mail, Heart, Check, Trash2, ArrowLeft } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  Users, 
+  MessageSquare, 
+  Eye, 
+  CheckCircle, 
+  XCircle, 
+  Calendar,
+  TrendingUp,
+  Mail,
+  User,
+  Briefcase
+} from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
+import type { Analytics, Comment, Contact } from "@/../../shared/schema";
 
 export default function Admin() {
-  const queryClient = useQueryClient();
+  const [selectedTab, setSelectedTab] = useState("overview");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: analytics, isLoading: analyticsLoading } = useQuery<Analytics>({
+  // Fetch data
+  const { data: analytics } = useQuery<Analytics>({
     queryKey: ["/api/analytics"],
   });
 
-  const { data: comments, isLoading: commentsLoading } = useQuery<Comment[]>({
+  const { data: allComments = [] } = useQuery<Comment[]>({
     queryKey: ["/api/comments"],
   });
 
-  const { data: contacts, isLoading: contactsLoading } = useQuery<Contact[]>({
+  const { data: contacts = [] } = useQuery<Contact[]>({
     queryKey: ["/api/contacts"],
   });
 
+  // Separate approved and pending comments
+  const approvedComments = allComments.filter(comment => comment.isApproved);
+  const pendingComments = allComments.filter(comment => !comment.isApproved);
+
+  // Mutations
   const approveCommentMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest("POST", `/api/comments/${id}/approve`);
-      return response.json();
+    mutationFn: async (commentId: number) => {
+      return apiRequest("POST", `/api/comments/${commentId}/approve`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/comments"] });
-      toast({ title: "Comment approved successfully" });
-    },
-    onError: () => {
-      toast({ 
-        title: "Error", 
-        description: "Failed to approve comment",
-        variant: "destructive" 
+      toast({
+        title: "Comment Approved",
+        description: "The comment is now visible to visitors.",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/comments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/analytics"] });
     },
   });
 
   const deleteCommentMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest("DELETE", `/api/comments/${id}`);
-      return response.json();
+    mutationFn: async (commentId: number) => {
+      return apiRequest("DELETE", `/api/comments/${commentId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/comments"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics"] });
-      toast({ title: "Comment deleted successfully" });
-    },
-    onError: () => {
-      toast({ 
-        title: "Error", 
-        description: "Failed to delete comment",
-        variant: "destructive" 
+      toast({
+        title: "Comment Deleted",
+        description: "The comment has been removed.",
+        variant: "destructive",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/comments"] });
     },
   });
 
   const markContactReadMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest("POST", `/api/contacts/${id}/read`);
-      return response.json();
+    mutationFn: async (contactId: number) => {
+      return apiRequest("POST", `/api/contacts/${contactId}/read`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
-      toast({ title: "Contact marked as read" });
-    },
-    onError: () => {
-      toast({ 
-        title: "Error", 
-        description: "Failed to mark contact as read",
-        variant: "destructive" 
-      });
     },
   });
-
-  const deleteContactMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest("DELETE", `/api/contacts/${id}`);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/analytics"] });
-      toast({ title: "Contact deleted successfully" });
-    },
-    onError: () => {
-      toast({ 
-        title: "Error", 
-        description: "Failed to delete contact",
-        variant: "destructive" 
-      });
-    },
-  });
-
-  const formatTimeAgo = (date: string | Date) => {
-    const now = new Date();
-    const past = new Date(date);
-    const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return "Just now";
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)} weeks ago`;
-    return `${Math.floor(diffInSeconds / 2592000)} months ago`;
-  };
 
   return (
-    <div className="min-h-screen bg-gradient-dark p-6">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#0a0f1c] text-white p-6">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Admin Dashboard</h1>
-            <p className="text-gray-400">Monitor website analytics and manage content</p>
-          </div>
-          <Link href="/">
-            <Button variant="outline" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Portfolio
-            </Button>
-          </Link>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-[#00d9ff] mb-2">Admin Dashboard</h1>
+          <p className="text-gray-400">Manage your portfolio analytics, comments, and contacts</p>
         </div>
 
-        {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-card border-border">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Visitors</p>
-                  {analyticsLoading ? (
-                    <Skeleton className="h-8 w-16 mt-2" />
-                  ) : (
-                    <p className="text-2xl font-bold text-white">{analytics?.totalVisitors || 0}</p>
-                  )}
-                </div>
-                <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <Users className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <p className="text-sm text-green-500 mt-2">+12% from last month</p>
-            </CardContent>
-          </Card>
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 bg-gray-800">
+            <TabsTrigger value="overview" className="data-[state=active]:bg-[#00d9ff] data-[state=active]:text-black">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="comments" className="data-[state=active]:bg-[#00d9ff] data-[state=active]:text-black">
+              Comments
+            </TabsTrigger>
+            <TabsTrigger value="contacts" className="data-[state=active]:bg-[#00d9ff] data-[state=active]:text-black">
+              Contacts
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-[#00d9ff] data-[state=active]:text-black">
+              Analytics
+            </TabsTrigger>
+          </TabsList>
 
-          <Card className="bg-card border-border">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Comments</p>
-                  {analyticsLoading ? (
-                    <Skeleton className="h-8 w-12 mt-2" />
-                  ) : (
-                    <p className="text-2xl font-bold text-white">{analytics?.totalComments || 0}</p>
-                  )}
-                </div>
-                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                  <MessageSquare className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <p className="text-sm text-green-500 mt-2">+8% from last month</p>
-            </CardContent>
-          </Card>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">Total Visitors</CardTitle>
+                  <Users className="h-4 w-4 text-[#00d9ff]" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-white">{analytics?.totalVisitors || 0}</div>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-card border-border">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Contact Inquiries</p>
-                  {analyticsLoading ? (
-                    <Skeleton className="h-8 w-12 mt-2" />
-                  ) : (
-                    <p className="text-2xl font-bold text-white">{analytics?.totalContacts || 0}</p>
-                  )}
-                </div>
-                <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
-                  <Mail className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <p className="text-sm text-green-500 mt-2">+25% from last month</p>
-            </CardContent>
-          </Card>
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">Total Comments</CardTitle>
+                  <MessageSquare className="h-4 w-4 text-[#00d9ff]" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-white">{allComments.length}</div>
+                  <p className="text-xs text-gray-400">
+                    {approvedComments.length} approved, {pendingComments.length} pending
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card className="bg-card border-border">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Total Likes</p>
-                  {analyticsLoading ? (
-                    <Skeleton className="h-8 w-16 mt-2" />
-                  ) : (
-                    <p className="text-2xl font-bold text-white">{analytics?.totalLikes || 0}</p>
-                  )}
-                </div>
-                <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center">
-                  <Heart className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <p className="text-sm text-green-500 mt-2">+15% from last month</p>
-            </CardContent>
-          </Card>
-        </div>
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">Contact Messages</CardTitle>
+                  <Mail className="h-4 w-4 text-[#00d9ff]" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-white">{contacts.length}</div>
+                  <p className="text-xs text-gray-400">
+                    {contacts.filter(c => !c.isRead).length} unread
+                  </p>
+                </CardContent>
+              </Card>
 
-        {/* Content Management */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Comments Management */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-white">Recent Comments</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {commentsLoading ? (
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="p-4 bg-muted rounded-lg">
-                      <Skeleton className="h-4 w-24 mb-2" />
-                      <Skeleton className="h-3 w-full mb-2" />
-                      <Skeleton className="h-3 w-3/4" />
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">Total Likes</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-[#00d9ff]" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-white">{analytics?.totalLikes || 0}</div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-[#00d9ff]">Recent Comments</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {allComments.slice(0, 3).map((comment) => (
+                    <div key={comment.id} className="flex items-start space-x-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-white">{comment.name}</span>
+                          <Badge variant={comment.isApproved ? "default" : "secondary"} className="text-xs">
+                            {comment.isApproved ? "Approved" : "Pending"}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-400 mt-1">{comment.comment.slice(0, 100)}...</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(comment.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
                   ))}
-                </div>
-              ) : comments && comments.length > 0 ? (
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {comments.slice(0, 10).map((comment) => (
-                    <div key={comment.id} className="p-4 bg-muted rounded-lg">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h4 className="font-semibold text-white">{comment.name}</h4>
-                          <p className="text-sm text-muted-foreground">{formatTimeAgo(comment.createdAt)}</p>
-                        </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-[#00d9ff]">Recent Contacts</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {contacts.slice(0, 3).map((contact) => (
+                    <div key={contact.id} className="flex items-start space-x-3">
+                      <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          {!comment.isApproved && (
-                            <Badge variant="secondary">Pending</Badge>
-                          )}
-                          {comment.isApproved && (
-                            <Badge variant="default">Approved</Badge>
+                          <span className="font-medium text-white">
+                            {contact.firstName} {contact.lastName}
+                          </span>
+                          {!contact.isRead && (
+                            <Badge variant="destructive" className="text-xs">New</Badge>
                           )}
                         </div>
+                        <p className="text-sm text-gray-400 mt-1">{contact.subject}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {new Date(contact.createdAt).toLocaleDateString()}
+                        </p>
                       </div>
-                      <p className="text-sm text-gray-300 mb-3 line-clamp-2">{comment.content}</p>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">{comment.likes} likes</span>
-                        <div className="flex gap-2">
-                          {!comment.isApproved && (
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Comments Tab */}
+          <TabsContent value="comments" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Pending Comments */}
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-[#00d9ff] flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5" />
+                    Pending Approval ({pendingComments.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 max-h-96 overflow-y-auto">
+                  {pendingComments.length > 0 ? (
+                    pendingComments.map((comment) => (
+                      <div key={comment.id} className="border border-gray-700 rounded-lg p-4 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4 text-[#00d9ff]" />
+                              <span className="font-medium text-white">{comment.name}</span>
+                            </div>
+                            {comment.profession && (
+                              <div className="flex items-center gap-2 mt-1">
+                                <Briefcase className="h-3 w-3 text-gray-400" />
+                                <span className="text-sm text-gray-400">{comment.profession}</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
                             <Button
                               size="sm"
-                              variant="outline"
                               onClick={() => approveCommentMutation.mutate(comment.id)}
                               disabled={approveCommentMutation.isPending}
-                              className="h-8 px-2"
+                              className="bg-green-600 hover:bg-green-700 text-white"
                             >
-                              <Check className="h-3 w-3" />
+                              <CheckCircle className="h-4 w-4" />
                             </Button>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => deleteCommentMutation.mutate(comment.id)}
-                            disabled={deleteCommentMutation.isPending}
-                            className="h-8 px-2"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deleteCommentMutation.mutate(comment.id)}
+                              disabled={deleteCommentMutation.isPending}
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <p className="text-gray-300 text-sm">{comment.comment}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>{comment.email}</span>
+                          <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No comments yet</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    ))
+                  ) : (
+                    <p className="text-gray-400 text-center py-8">No pending comments</p>
+                  )}
+                </CardContent>
+              </Card>
 
-          {/* Contacts Management */}
-          <Card className="bg-card border-border">
-            <CardHeader>
-              <CardTitle className="text-white">Recent Contacts</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {contactsLoading ? (
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="p-4 bg-muted rounded-lg">
-                      <Skeleton className="h-4 w-24 mb-2" />
-                      <Skeleton className="h-3 w-full mb-2" />
-                      <Skeleton className="h-3 w-3/4" />
-                    </div>
-                  ))}
-                </div>
-              ) : contacts && contacts.length > 0 ? (
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {contacts.slice(0, 10).map((contact) => (
-                    <div key={contact.id} className="p-4 bg-muted rounded-lg">
-                      <div className="flex items-start justify-between mb-2">
+              {/* Approved Comments */}
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader>
+                  <CardTitle className="text-[#00d9ff] flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5" />
+                    Approved Comments ({approvedComments.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 max-h-96 overflow-y-auto">
+                  {approvedComments.map((comment) => (
+                    <div key={comment.id} className="border border-gray-700 rounded-lg p-4 space-y-3">
+                      <div className="flex items-start justify-between">
                         <div>
-                          <h4 className="font-semibold text-white">
-                            {contact.firstName} {contact.lastName}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">{contact.email}</p>
-                          <p className="text-sm text-muted-foreground">{formatTimeAgo(contact.createdAt)}</p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {!contact.isRead && (
-                            <Badge variant="secondary">New</Badge>
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-green-400" />
+                            <span className="font-medium text-white">{comment.name}</span>
+                            <Badge className="bg-green-500/20 text-green-400 text-xs">Live</Badge>
+                          </div>
+                          {comment.profession && (
+                            <div className="flex items-center gap-2 mt-1">
+                              <Briefcase className="h-3 w-3 text-gray-400" />
+                              <span className="text-sm text-gray-400">{comment.profession}</span>
+                            </div>
                           )}
                         </div>
-                      </div>
-                      <h5 className="font-medium text-white mb-1">{contact.subject}</h5>
-                      <p className="text-sm text-gray-300 mb-3 line-clamp-2">{contact.message}</p>
-                      <div className="flex gap-2">
-                        {!contact.isRead && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => markContactReadMutation.mutate(contact.id)}
-                            disabled={markContactReadMutation.isPending}
-                            className="h-8 px-2"
-                          >
-                            <Check className="h-3 w-3" />
-                          </Button>
-                        )}
                         <Button
                           size="sm"
-                          variant="outline"
-                          onClick={() => deleteContactMutation.mutate(contact.id)}
-                          disabled={deleteContactMutation.isPending}
-                          className="h-8 px-2"
+                          variant="destructive"
+                          onClick={() => deleteCommentMutation.mutate(comment.id)}
+                          disabled={deleteCommentMutation.isPending}
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <XCircle className="h-4 w-4" />
                         </Button>
+                      </div>
+                      <p className="text-gray-300 text-sm">{comment.comment}</p>
+                      <div className="flex items-center gap-4 text-xs text-gray-500">
+                        <span>{comment.email}</span>
+                        <span>{comment.likes} likes</span>
+                        <span>{new Date(comment.createdAt).toLocaleDateString()}</span>
                       </div>
                     </div>
                   ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">No contacts yet</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Contacts Tab */}
+          <TabsContent value="contacts" className="space-y-6">
+            <Card className="bg-gray-800/50 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-[#00d9ff] flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Contact Messages ({contacts.length})
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {contacts.map((contact) => (
+                  <div key={contact.id} className="border border-gray-700 rounded-lg p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-white">
+                            {contact.firstName} {contact.lastName}
+                          </span>
+                          {!contact.isRead && (
+                            <Badge variant="destructive" className="text-xs">New</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-400">{contact.email}</p>
+                        <p className="text-sm font-medium text-[#00d9ff] mt-1">{contact.subject}</p>
+                      </div>
+                      {!contact.isRead && (
+                        <Button
+                          size="sm"
+                          onClick={() => markContactReadMutation.mutate(contact.id)}
+                          className="bg-[#00d9ff] hover:bg-[#00b8e6] text-black"
+                        >
+                          Mark Read
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-gray-300 text-sm leading-relaxed">{contact.message}</p>
+                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                      <span>{new Date(contact.createdAt).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                ))}
+                {contacts.length === 0 && (
+                  <p className="text-gray-400 text-center py-8">No contact messages yet</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">Total Page Views</CardTitle>
+                  <Eye className="h-4 w-4 text-[#00d9ff]" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-white">{analytics?.totalVisitors || 0}</div>
+                  <p className="text-xs text-gray-400 mt-1">Unique visitors tracked</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">Engagement Rate</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-[#00d9ff]" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-white">
+                    {analytics?.totalVisitors ? 
+                      Math.round((allComments.length / analytics.totalVisitors) * 100) : 0}%
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Comments per visitor</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">Contact Rate</CardTitle>
+                  <Mail className="h-4 w-4 text-[#00d9ff]" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-white">
+                    {analytics?.totalVisitors ? 
+                      Math.round((contacts.length / analytics.totalVisitors) * 100) : 0}%
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Contacts per visitor</p>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gray-800/50 border-gray-700">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-400">Approval Rate</CardTitle>
+                  <CheckCircle className="h-4 w-4 text-[#00d9ff]" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-white">
+                    {allComments.length ? 
+                      Math.round((approvedComments.length / allComments.length) * 100) : 0}%
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Comments approved</p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

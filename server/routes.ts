@@ -111,6 +111,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/comments/approved", async (req, res) => {
+    try {
+      const comments = await storage.getApprovedComments();
+      res.json(comments);
+    } catch (error) {
+      console.error("Error fetching approved comments:", error);
+      res.status(500).json({ message: "Failed to fetch approved comments" });
+    }
+  });
+
   app.post("/api/comments", async (req, res) => {
     try {
       const validatedData = insertCommentSchema.parse(req.body);
