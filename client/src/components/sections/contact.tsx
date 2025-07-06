@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Clock, Send } from "lucide-react";
+import { Clock, Send, Mail, MapPin } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,10 +26,10 @@ export default function Contact() {
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
-      firstName: "Contact",
-      lastName: "Form",
-      email: "user@example.com",
-      subject: "General Inquiry",
+      firstName: "",
+      lastName: "",
+      email: "",
+      subject: "",
       message: "",
     },
   });
@@ -70,22 +70,104 @@ export default function Contact() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Left side - Response Time */}
-          <div className="flex items-center justify-center">
-            <div className="text-center">
-              <div className="w-24 h-24 bg-[#00d9ff]/10 rounded-full flex items-center justify-center mb-6 mx-auto">
-                <Clock className="w-12 h-12 text-[#00d9ff]" />
+          {/* Left side - Contact Info */}
+          <div className="space-y-8">
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-6">Let's Connect</h3>
+              <p className="text-gray-400 leading-relaxed mb-8">
+                I'm always interested in discussing new opportunities, innovative projects, or just having a conversation about cybersecurity and technology.
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#00d9ff]/10 rounded-lg flex items-center justify-center">
+                  <Mail className="w-6 h-6 text-[#00d9ff]" />
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold">Email</h4>
+                  <p className="text-gray-400">Available via contact form</p>
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Response Time</h3>
-              <p className="text-gray-400 text-lg">Usually within 24 hours</p>
+
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#00d9ff]/10 rounded-lg flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-[#00d9ff]" />
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold">Location</h4>
+                  <p className="text-gray-400">Gurugram, Haryana, India</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-[#00d9ff]/10 rounded-lg flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-[#00d9ff]" />
+                </div>
+                <div>
+                  <h4 className="text-white font-semibold">Response Time</h4>
+                  <p className="text-gray-400">Usually within 24 hours</p>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Right side - Contact Form */}
           <div>
-            <h3 className="text-xl font-bold text-white mb-6">Message</h3>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <input
+                          {...field}
+                          className="w-full bg-gray-800/30 border border-gray-700 text-white p-3 rounded-lg placeholder-gray-500 focus:border-[#00d9ff] focus:outline-none"
+                          placeholder="Name"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <input
+                          {...field}
+                          type="email"
+                          className="w-full bg-gray-800/30 border border-gray-700 text-white p-3 rounded-lg placeholder-gray-500 focus:border-[#00d9ff] focus:outline-none"
+                          placeholder="your.email@example.com"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="subject"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <input
+                          {...field}
+                          className="w-full bg-gray-800/30 border border-gray-700 text-white p-3 rounded-lg placeholder-gray-500 focus:border-[#00d9ff] focus:outline-none"
+                          placeholder="Subject"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="message"
@@ -94,8 +176,8 @@ export default function Contact() {
                       <FormControl>
                         <Textarea
                           {...field}
-                          rows={8}
-                          className="bg-gray-800/30 border-gray-700 text-white resize-none text-lg p-6"
+                          rows={6}
+                          className="w-full bg-gray-800/30 border border-gray-700 text-white p-3 rounded-lg placeholder-gray-500 focus:border-[#00d9ff] focus:outline-none resize-none"
                           placeholder="Your message here..."
                         />
                       </FormControl>
@@ -107,7 +189,7 @@ export default function Contact() {
                 <Button
                   type="submit"
                   disabled={contactMutation.isPending}
-                  className="w-full bg-[#00d9ff] hover:bg-[#00b8e6] text-black font-semibold py-4 text-lg rounded-lg"
+                  className="w-full bg-[#00d9ff] hover:bg-[#00b8e6] text-black font-semibold py-3 text-lg rounded-lg"
                 >
                   {contactMutation.isPending ? (
                     "Sending..."

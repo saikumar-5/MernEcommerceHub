@@ -1,0 +1,184 @@
+Cybersecurity & Technology Enthusiast
+
+Full Stack Development
+Security
+Problem Solving
+Research
+View My Work
+<About Me/>
+Currently pursuing my second year of B.Tech at BML Munjal University, I am passionate about developing my skills in Cyber Security and Full Stack Development. Eager to learn, explore, and grow in the field, I am constantly working towards building a strong foundation for a career in cybersecurity.
+
+Motivated individual passionate in exploring emerging technologies, solving complex challenges, and continuously enhancing technical expertise and communication skills to make meaningful contributions.
+
+5+
+Projects
+
+Education
+BML Munjal University
+B.Tech Computer Science • Aug 2023 - Present
+
+Sri Chaitanya Junior College
+Higher Secondary • June 2023
+
+97.1%
+
+Certifications
+✓
+Google Cybersecurity Professional Certificate
+✓
+Mastercard Cybersecurity Job Simulation
+✓
+Cisco Networking Academy Certificate
+✓
+Tata Cybersecurity Analyst Job Simulation
+<Experience/>
+Full Stack Web Developer
+Innodatatics - GenAI | Data Science | BI
+
+June 2025 - Present • Hyderabad, Telangana
+
+Working on advanced web development projects with focus on GenAI integration and data science applications.
+
+Current
+Cyber Security Tool Developer
+Durbhasi Gurukulam
+
+April 2025 - Present • Remote
+
+Building a live IPS tool using Fail2Ban and Rust programming language. Gaining hands-on experience in network security, intrusion detection, and static malware analysis.
+
+Current
+Research Assistant
+BML Munjal University
+
+August 2024 - Present • Gurugram, Haryana
+
+Conducting research on heterogeneous nano-mechanical behavior of vehicle gear materials using Python data analysis and machine learning techniques.
+
+Current
+<Projects/>
+PHISHX
+Security
+Phishing Detection Extension
+
+Developed a browser extension that extracts and analyzes URLs using a Flask-based backend and XGBoost ML model (97% accuracy) to detect phishing websites with real-time predictions.
+
+Python
+Flask
+XGBoost
+ML
+97%Accuracy
+
+AGRIMART
+E-commerce
+Online Marketplace
+
+Developed a full-stack e-commerce marketplace connecting farmers with customers, featuring custom dashboards for real-time tracking of sales and transactions.
+
+HTML
+CSS
+JavaScript
+Node.js
+MongoDB
+Full StackMERN
+
+AGRIMART MOBILE
+Mobile App
+Android E-commerce App
+
+Developed an Android application for AgriMart marketplace using XML for UI design and Java for backend integration, featuring responsive design and seamless user experience.
+
+Android Studio
+XML
+Java
+API Integration
+Native Android2024-Current
+
+Nano-Mechanical Analysis
+Research
+Material Science Research
+
+Conducting comprehensive research on vehicle gear materials utilizing nanoindentation test results analyzed through Python and Data Analysis techniques with ML models.
+
+Python
+Data Analysis
+Machine Learning
+Statistics
+Ongoing2024-Current
+
+<Skills/>
+Programming
+Proficient:
+Java
+SQL
+HTML
+CSS
+Experienced:
+Python
+JavaScript
+C
+C++
+Familiar:
+R Programming
+Cybersecurity
+✓
+Malware Analysis
+✓
+Intrusion Detection
+✓
+Network Security
+✓
+Threat Analysis
+✓
+Security Frameworks
+Libraries/Frameworks
+✓
+Express.js
+✓
+Pandas
+✓
+Numpy
+✓
+Matplotlib
+✓
+nlkt
+✓
+Sklearn
+Tools/Platforms
+🔧
+Git
+🐛
+Burp Suite
+🌐
+Wireshark
+🎨
+Figma
+🌐
+Cisco Packet Tracer
+<Contact Me/>
+Let's Connect
+I'm always interested in discussing new opportunities, innovative projects, or just having a conversation about cybersecurity and technology.
+
+Email
+Available via contact form
+
+Location
+Gurugram, Haryana, India
+
+Response Time
+Usually within 24 hours
+
+Name
+Your Name
+Email
+your.email@example.com
+Subject
+Project Inquiry
+Message
+Your message here...
+Send Message
+
+Like
+
+Comment
+Sai Kumar

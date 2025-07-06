@@ -1,90 +1,80 @@
-import { useQuery } from "@tanstack/react-query";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, MapPin } from "lucide-react";
-import type { Experience } from "@/../../shared/schema";
-
 export default function ExperienceSection() {
-  const { data: experiences = [], isLoading } = useQuery<Experience[]>({
-    queryKey: ["/api/experiences"],
-  });
-
-  if (isLoading) {
-    return (
-      <section id="experience" className="py-20 bg-[#0a0f1c]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-[#00d9ff] mb-4">
-              &lt;Experience/&gt;
-            </h2>
-          </div>
-          <div className="space-y-8">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-48 bg-gray-800/30 rounded-lg"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  const experiences = [
+    {
+      id: 1,
+      position: "Full Stack Web Developer",
+      company: "Innodatatics - GenAI | Data Science | BI",
+      duration: "June 2025 - Present",
+      location: "Hyderabad, Telangana",
+      description: "Working on advanced web development projects with focus on GenAI integration and data science applications.",
+      status: "Current",
+      type: "work"
+    },
+    {
+      id: 2,
+      position: "Cyber Security Tool Developer",
+      company: "Durbhasi Gurukulam",
+      duration: "April 2025 - Present",
+      location: "Remote",
+      description: "Building a live IPS tool using Fail2Ban and Rust programming language. Gaining hands-on experience in network security, intrusion detection, and static malware analysis.",
+      status: "Current",
+      type: "work"
+    },
+    {
+      id: 3,
+      position: "Research Assistant",
+      company: "BML Munjal University",
+      duration: "August 2024 - Present",
+      location: "Gurugram, Haryana",
+      description: "Conducting research on heterogeneous nano-mechanical behavior of vehicle gear materials using Python data analysis and machine learning techniques.",
+      status: "Current",
+      type: "research"
+    }
+  ];
 
   return (
     <section id="experience" className="py-20 bg-[#0a0f1c]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Title */}
+        {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-[#00d9ff] mb-4">
             &lt;Experience/&gt;
           </h2>
         </div>
 
-        {/* Timeline */}
         <div className="relative">
-          {/* Vertical line */}
+          {/* Timeline line */}
           <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-[#00d9ff]"></div>
 
           <div className="space-y-12">
             {experiences.map((experience, index) => (
-              <div key={experience.id} className="relative">
+              <div key={experience.id} className="relative flex items-start">
                 {/* Timeline dot */}
                 <div className="absolute left-6 w-4 h-4 bg-[#00d9ff] rounded-full border-4 border-[#0a0f1c]"></div>
-
-                {/* Content - Always left aligned */}
-                <div className="ml-20">
-                  <div className="text-left">
-                    <h3 className="text-xl font-bold text-[#00d9ff] mb-2">
-                      {experience.position}
-                    </h3>
-                    <h4 className="text-lg text-white mb-1">
-                      {experience.company}
-                    </h4>
-                    <div className="text-sm text-gray-400 mb-3">
-                      {experience.startDate} - {experience.endDate || "Present"} • {experience.endDate || "Present"} • Remote
+                
+                {/* Content card */}
+                <div className="ml-20 w-full">
+                  <div className="bg-gray-800/30 border border-gray-700 rounded-lg p-6 hover:border-[#00d9ff]/50 transition-colors">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-[#00d9ff] mb-1">
+                          {experience.position}
+                        </h3>
+                        <p className="text-lg text-white font-medium">
+                          {experience.company}
+                        </p>
+                        <p className="text-sm text-gray-400 mt-1">
+                          {experience.duration} • {experience.location}
+                        </p>
+                      </div>
+                      <span className="px-3 py-1 bg-[#00d9ff]/20 text-[#00d9ff] text-sm rounded-full border border-[#00d9ff]/30">
+                        {experience.status}
+                      </span>
                     </div>
                     
-                    <p className="text-gray-300 mb-4 leading-relaxed">
+                    <p className="text-gray-300 leading-relaxed">
                       {experience.description}
                     </p>
-
-                    {!experience.endDate && (
-                      <Badge className="bg-green-500/20 text-green-400 border-green-500/50 mb-4">
-                        Current
-                      </Badge>
-                    )}
-
-                    <div className="flex flex-wrap gap-2">
-                      {experience.technologies.map((tech) => (
-                        <Badge
-                          key={tech}
-                          variant="outline"
-                          className="text-gray-300 border-gray-600 bg-gray-700/50 text-xs"
-                        >
-                          {tech}
-                        </Badge>
-                      ))}
-                    </div>
                   </div>
                 </div>
               </div>
