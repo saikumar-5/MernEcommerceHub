@@ -205,32 +205,7 @@ export default function Contact() {
           </div>
         </div>
 
-        {/* Like and Comment buttons section */}
-        <div className="text-center mt-20">
-          <div className="flex justify-center space-x-8">
-            <button className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-              <div className="w-12 h-12 border-2 border-gray-600 rounded-full flex items-center justify-center hover:border-red-400">
-                <span className="text-xl">♡</span>
-              </div>
-              <span>Like</span>
-            </button>
-            
-            <button 
-              onClick={() => {
-                const element = document.getElementById("comments");
-                if (element) {
-                  element.scrollIntoView({ behavior: "smooth" });
-                }
-              }}
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
-            >
-              <div className="w-12 h-12 border-2 border-gray-600 rounded-full flex items-center justify-center hover:border-[#00d9ff]">
-                <span className="text-xl">💬</span>
-              </div>
-              <span>Comment</span>
-            </button>
-          </div>
-        </div>
+
       </div>
     </section>
   );
