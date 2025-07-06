@@ -1,157 +1,110 @@
 import { useQuery } from "@tanstack/react-query";
-import type { Experience } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, MapPin } from "lucide-react";
+import type { Experience } from "@/../../shared/schema";
 
 export default function ExperienceSection() {
-  const { data: experiences, isLoading } = useQuery<Experience[]>({
+  const { data: experiences = [], isLoading } = useQuery<Experience[]>({
     queryKey: ["/api/experiences"],
   });
 
+  if (isLoading) {
+    return (
+      <section id="experience" className="py-20 bg-[#0a0f1c]">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-[#00d9ff] mb-4">
+              &lt;Experience/&gt;
+            </h2>
+          </div>
+          <div className="space-y-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-48 bg-gray-800/30 rounded-lg"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section id="experience" className="py-20 bg-card">
+    <section id="experience" className="py-20 bg-[#0a0f1c]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Title */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-primary mb-4">Experience</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            My professional journey and key accomplishments
-          </p>
+          <h2 className="text-4xl font-bold text-[#00d9ff] mb-4">
+            &lt;Experience/&gt;
+          </h2>
         </div>
 
         {/* Timeline */}
         <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-1/2 transform -translate-x-1/2 w-1 bg-primary h-full hidden lg:block"></div>
+          {/* Vertical line */}
+          <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-[#00d9ff]"></div>
 
-          {isLoading ? (
-            <div className="space-y-16">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="relative flex items-center justify-between">
-                  <div className="w-5/12 pr-8">
-                    <div className="bg-background p-6 rounded-lg">
-                      <Skeleton className="h-6 w-3/4 mb-2" />
-                      <Skeleton className="h-5 w-1/2 mb-3" />
-                      <Skeleton className="h-4 w-full mb-2" />
-                      <Skeleton className="h-4 w-2/3 mb-4" />
-                      <div className="flex gap-2">
-                        <Skeleton className="h-6 w-16" />
-                        <Skeleton className="h-6 w-16" />
-                        <Skeleton className="h-6 w-16" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-primary rounded-full border-4 border-card hidden lg:block"></div>
-                  <div className="w-5/12 pl-8">
-                    <Skeleton className="h-6 w-24" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-16">
-              {experiences?.map((experience, index) => (
-                <div key={experience.id} className="relative">
-                  {/* Mobile layout */}
-                  <div className="lg:hidden">
-                    <div className="bg-background p-6 rounded-lg border border-border">
-                      <div className="flex items-start justify-between mb-4">
+          <div className="space-y-12">
+            {experiences.map((experience, index) => (
+              <div key={experience.id} className="relative">
+                {/* Timeline dot */}
+                <div className="absolute left-6 w-4 h-4 bg-[#00d9ff] rounded-full border-4 border-[#0a0f1c]"></div>
+
+                {/* Content */}
+                <div className="ml-20">
+                  <Card className="bg-gray-800/30 border-gray-700 hover:border-[#00d9ff]/50 transition-colors">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between mb-4">
                         <div>
-                          <h3 className="text-xl font-bold text-foreground mb-1">
+                          <h3 className="text-xl font-bold text-[#00d9ff] mb-2">
                             {experience.position}
                           </h3>
-                          <h4 className="text-primary font-semibold mb-2">{experience.company}</h4>
-                          <div className="text-primary font-mono font-bold text-sm">
-                            {experience.startDate} - {experience.endDate || "Present"}
+                          <h4 className="text-lg text-white mb-2">
+                            {experience.company}
+                          </h4>
+                        </div>
+                        
+                        <div className="flex flex-col lg:items-end space-y-2">
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <Calendar className="w-4 h-4" />
+                            <span>
+                              {experience.startDate} - {experience.endDate || "Present"}
+                            </span>
                           </div>
+                          <div className="flex items-center gap-2 text-gray-400">
+                            <MapPin className="w-4 h-4" />
+                            <span>Remote</span>
+                          </div>
+                          {!experience.endDate && (
+                            <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
+                              Current
+                            </Badge>
+                          )}
                         </div>
                       </div>
-                      <p className="text-muted-foreground mb-4 leading-relaxed">
+
+                      <p className="text-gray-300 mb-4 leading-relaxed">
                         {experience.description}
                       </p>
+
                       <div className="flex flex-wrap gap-2">
                         {experience.technologies.map((tech) => (
-                          <Badge key={tech} variant="outline" className="text-xs font-mono">
+                          <Badge
+                            key={tech}
+                            variant="outline"
+                            className="text-gray-300 border-gray-600 bg-gray-700/50"
+                          >
                             {tech}
                           </Badge>
                         ))}
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Desktop layout */}
-                  <div className="hidden lg:flex items-center justify-between">
-                    {index % 2 === 0 ? (
-                      <>
-                        <div className="w-5/12 text-right pr-8">
-                          <div className="bg-background p-6 rounded-lg border border-border">
-                            <h3 className="text-xl font-bold text-foreground mb-2">
-                              {experience.position}
-                            </h3>
-                            <h4 className="text-primary font-semibold mb-3">{experience.company}</h4>
-                            <p className="text-muted-foreground mb-4 leading-relaxed">
-                              {experience.description}
-                            </p>
-                            <div className="flex flex-wrap gap-2 justify-end">
-                              {experience.technologies.map((tech) => (
-                                <Badge key={tech} variant="outline" className="text-xs font-mono">
-                                  {tech}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Timeline dot */}
-                        <div className="absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-primary rounded-full border-4 border-card"></div>
-
-                        <div className="w-5/12 pl-8">
-                          <div className="text-primary font-mono font-bold">
-                            {experience.startDate} - {experience.endDate || "Present"}
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-5/12 pr-8">
-                          <div className="text-primary font-mono font-bold text-right">
-                            {experience.startDate} - {experience.endDate || "Present"}
-                          </div>
-                        </div>
-
-                        {/* Timeline dot */}
-                        <div className="absolute left-1/2 transform -translate-x-1/2 w-6 h-6 bg-primary rounded-full border-4 border-card"></div>
-
-                        <div className="w-5/12 text-left pl-8">
-                          <div className="bg-background p-6 rounded-lg border border-border">
-                            <h3 className="text-xl font-bold text-foreground mb-2">
-                              {experience.position}
-                            </h3>
-                            <h4 className="text-primary font-semibold mb-3">{experience.company}</h4>
-                            <p className="text-muted-foreground mb-4 leading-relaxed">
-                              {experience.description}
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {experience.technologies.map((tech) => (
-                                <Badge key={tech} variant="outline" className="text-xs font-mono">
-                                  {tech}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              ))}
-            </div>
-          )}
-
-          {experiences && experiences.length === 0 && !isLoading && (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">No experience data available.</p>
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>

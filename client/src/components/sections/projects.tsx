@@ -1,191 +1,184 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import type { Project } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Github, ExternalLink, Heart } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Heart, ExternalLink, Github, Filter } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
+import type { Project } from "@/../../shared/schema";
 
 export default function Projects() {
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [filter, setFilter] = useState<string>("all");
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
-  const { data: projects, isLoading } = useQuery<Project[]>({
-    queryKey: ["/api/projects", activeFilter],
+  const { data: projects = [], isLoading } = useQuery<Project[]>({
+    queryKey: ["/api/projects"],
   });
 
   const likeMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const response = await apiRequest("POST", `/api/projects/${id}/like`);
-      return response.json();
+    mutationFn: async (projectId: number) => {
+      return apiRequest("POST", `/api/projects/${projectId}/like`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/projects"] });
-      toast({ title: "Thanks for the like! ❤️" });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to like project",
-        variant: "destructive",
-      });
     },
   });
 
-  const filters = [
-    { id: "all", label: "All" },
-    { id: "fullstack", label: "Full Stack" },
-    { id: "frontend", label: "Frontend" },
-    { id: "backend", label: "Backend" },
-  ];
+  const filteredProjects = projects.filter(project => 
+    filter === "all" || project.category === filter
+  );
 
-  const formatTimeAgo = (date: string | Date) => {
-    const now = new Date();
-    const past = new Date(date);
-    const diffInDays = Math.floor((now.getTime() - past.getTime()) / (1000 * 60 * 60 * 24));
+  const categories = ["all", ...Array.from(new Set(projects.map(p => p.category)))];
 
-    if (diffInDays < 30) return `${diffInDays} days ago`;
-    if (diffInDays < 365) return `${Math.floor(diffInDays / 30)} months ago`;
-    return `${Math.floor(diffInDays / 365)} years ago`;
-  };
-
-  const handleExternalLink = (url: string | null, type: string) => {
-    if (!url) {
-      toast({
-        title: "Link not available",
-        description: `${type} link is not available for this project`,
-        variant: "destructive",
-      });
-      return;
-    }
-    // In a real app, this would open the actual URL
-    console.log(`Navigate to ${type}: ${url}`);
-    toast({ title: `Opening ${type} link...` });
-  };
-
-  return (
-    <section id="projects" className="py-20 bg-background">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-primary mb-4">Featured Projects</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            A showcase of my recent work and technical accomplishments
-          </p>
-        </div>
-
-        {/* Project Filter */}
-        <div className="flex justify-center mb-12">
-          <div className="bg-card rounded-lg p-2 flex space-x-2 border border-border">
-            {filters.map((filter) => (
-              <Button
-                key={filter.id}
-                variant={activeFilter === filter.id ? "default" : "ghost"}
-                size="sm"
-                onClick={() => setActiveFilter(filter.id)}
-                className="transition-all duration-300"
-              >
-                {filter.label}
-              </Button>
+  if (isLoading) {
+    return (
+      <section id="projects" className="py-20 bg-[#0a0f1c]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-[#00d9ff] mb-4">
+              &lt;Projects/&gt;
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-80 bg-gray-800/30 rounded-lg"></div>
+              </div>
             ))}
           </div>
         </div>
+      </section>
+    );
+  }
 
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {isLoading
-            ? [...Array(6)].map((_, i) => (
-                <Card key={i} className="bg-card border-border">
-                  <Skeleton className="w-full h-48" />
-                  <CardContent className="p-6">
-                    <Skeleton className="h-6 w-3/4 mb-3" />
-                    <Skeleton className="h-4 w-full mb-2" />
-                    <Skeleton className="h-4 w-2/3 mb-4" />
-                    <div className="flex gap-2 mb-4">
-                      <Skeleton className="h-6 w-16" />
-                      <Skeleton className="h-6 w-16" />
-                      <Skeleton className="h-6 w-16" />
-                    </div>
-                    <div className="flex justify-between">
-                      <Skeleton className="h-4 w-20" />
-                      <Skeleton className="h-4 w-16" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            : projects?.map((project) => (
-                <Card
-                  key={project.id}
-                  className="project-card bg-card border-border overflow-hidden group"
-                >
-                  <div className="relative overflow-hidden">
-                    <img
-                      src={project.imageUrl}
-                      alt={project.title}
-                      className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  </div>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
-                        {project.title}
-                      </h3>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleExternalLink(project.githubUrl, "GitHub")}
-                          className="text-muted-foreground hover:text-primary"
-                        >
-                          <Github className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleExternalLink(project.liveUrl, "Live Demo")}
-                          className="text-muted-foreground hover:text-primary"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground mb-4 text-sm leading-relaxed">
-                      {project.description}
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {project.technologies.map((tech) => (
-                        <Badge key={tech} variant="secondary" className="text-xs font-mono">
-                          {tech}
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground text-sm">
-                        {formatTimeAgo(project.createdAt)}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => likeMutation.mutate(project.id)}
-                        disabled={likeMutation.isPending}
-                        className="flex items-center space-x-2 text-muted-foreground hover:text-red-500 transition-colors"
-                      >
-                        <Heart className="h-4 w-4" />
-                        <span className="text-sm">{project.likes}</span>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+  return (
+    <section id="projects" className="py-20 bg-[#0a0f1c]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Title */}
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-[#00d9ff] mb-4">
+            &lt;Projects/&gt;
+          </h2>
         </div>
 
-        {projects && projects.length === 0 && !isLoading && (
+        {/* Filter Buttons */}
+        <div className="flex flex-wrap justify-center gap-4 mb-12">
+          {categories.map((category) => (
+            <Button
+              key={category}
+              variant={filter === category ? "default" : "outline"}
+              onClick={() => setFilter(category)}
+              className={
+                filter === category
+                  ? "bg-[#00d9ff] text-black hover:bg-[#00b8e6]"
+                  : "border-gray-600 text-gray-300 hover:border-[#00d9ff] hover:text-white"
+              }
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              {category.charAt(0).toUpperCase() + category.slice(1)}
+            </Button>
+          ))}
+        </div>
+
+        {/* Projects Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredProjects.map((project) => (
+            <Card key={project.id} className="bg-gray-800/30 border-gray-700 hover:border-[#00d9ff]/50 transition-all duration-300 group">
+              <CardContent className="p-0">
+                {/* Project Image */}
+                <div className="relative overflow-hidden rounded-t-lg">
+                  <img
+                    src={project.imageUrl}
+                    alt={project.title}
+                    className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+                  <div className="absolute top-4 right-4">
+                    <Badge 
+                      className={`
+                        ${project.category === 'security' ? 'bg-red-500/20 text-red-400 border-red-500/50' : 
+                          project.category === 'e-commerce' ? 'bg-green-500/20 text-green-400 border-green-500/50' :
+                          project.category === 'mobile' ? 'bg-purple-500/20 text-purple-400 border-purple-500/50' :
+                          'bg-blue-500/20 text-blue-400 border-blue-500/50'}
+                      `}
+                    >
+                      {project.category.charAt(0).toUpperCase() + project.category.slice(1)}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Project Content */}
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-[#00d9ff] mb-3">
+                    {project.title}
+                  </h3>
+                  
+                  <p className="text-gray-300 mb-4 leading-relaxed">
+                    {project.description}
+                  </p>
+
+                  {/* Technology Badges */}
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {project.technologies.map((tech) => (
+                      <Badge
+                        key={tech}
+                        variant="outline"
+                        className="text-gray-300 border-gray-600 bg-gray-700/50 text-xs"
+                      >
+                        {tech}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex space-x-3">
+                      {project.githubUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-gray-600 text-gray-300 hover:border-[#00d9ff] hover:text-white"
+                          asChild
+                        >
+                          <a href={project.githubUrl} target="_blank" rel="noopener noreferrer">
+                            <Github className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                      {project.liveUrl && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-gray-600 text-gray-300 hover:border-[#00d9ff] hover:text-white"
+                          asChild
+                        >
+                          <a href={project.liveUrl} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+
+                    {/* Like Button */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => likeMutation.mutate(project.id)}
+                      disabled={likeMutation.isPending}
+                      className="text-gray-400 hover:text-red-400"
+                    >
+                      <Heart className="w-4 h-4 mr-1" />
+                      {project.likes}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {filteredProjects.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No projects found for the selected filter.</p>
+            <p className="text-gray-400 text-lg">No projects found for this category.</p>
           </div>
         )}
       </div>

@@ -1,21 +1,20 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { insertContactSchema } from "@shared/schema";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Mail, MapPin, Clock, Github, Linkedin, Twitter } from "lucide-react";
+import { Mail, MapPin, Clock, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { z } from "zod";
+import { apiRequest } from "@/lib/queryClient";
 
-const contactFormSchema = insertContactSchema.extend({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  email: z.string().email("Please enter a valid email"),
-  subject: z.string().min(1, "Subject is required"),
+const contactFormSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  subject: z.string().min(5, "Subject must be at least 5 characters"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
 
@@ -23,248 +22,202 @@ type ContactFormData = z.infer<typeof contactFormSchema>;
 
 export default function Contact() {
   const { toast } = useToast();
-  const [formData, setFormData] = useState<ContactFormData>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    subject: "",
-    message: "",
+  const queryClient = useQueryClient();
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const form = useForm<ContactFormData>({
+    resolver: zodResolver(contactFormSchema),
+    defaultValues: {
+      name: "",
+      email: "",
+      subject: "",
+      message: "",
+    },
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const contactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
-      const response = await apiRequest("POST", "/api/contacts", data);
-      return response.json();
+      return apiRequest("POST", "/api/contacts", data);
     },
     onSuccess: () => {
+      setIsSubmitted(true);
+      form.reset();
       toast({
-        title: "Message sent successfully!",
-        description: "Thank you for your message. I'll get back to you within 24 hours.",
+        title: "Message sent!",
+        description: "Thank you for your message. I'll get back to you soon.",
       });
-      setFormData({
-        firstName: "",
-        lastName: "",
-        email: "",
-        subject: "",
-        message: "",
-      });
-      setErrors({});
+      queryClient.invalidateQueries({ queryKey: ["/api/contacts"] });
     },
-    onError: (error: any) => {
+    onError: () => {
       toast({
         title: "Error",
-        description: error.message || "Failed to send message. Please try again.",
+        description: "Failed to send message. Please try again.",
         variant: "destructive",
       });
     },
   });
 
-  const handleInputChange = (field: keyof ContactFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }));
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const validatedData = contactFormSchema.parse(formData);
-      contactMutation.mutate(validatedData);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const newErrors: Record<string, string> = {};
-        error.errors.forEach((err) => {
-          if (err.path[0]) {
-            newErrors[err.path[0] as string] = err.message;
-          }
-        });
-        setErrors(newErrors);
-      }
-    }
-  };
-
-  const handleSocialClick = (platform: string) => {
-    // In a real app, these would link to actual social profiles
-    console.log(`Navigate to ${platform} profile`);
-    toast({ title: `Opening ${platform} profile...` });
+  const onSubmit = (data: ContactFormData) => {
+    contactMutation.mutate(data);
   };
 
   return (
-    <section id="contact" className="py-20 bg-background">
+    <section id="contact" className="py-20 bg-[#0a0f1c]">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Section Title */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl sm:text-5xl font-bold text-primary mb-4">Get In Touch</h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Ready to work together? Send me a message and let's create something amazing!
-          </p>
+          <h2 className="text-4xl font-bold text-[#00d9ff] mb-4">
+            &lt;Contact Me/&gt;
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Contact Info */}
+        <div className="grid lg:grid-cols-2 gap-12">
+          {/* Left Column - Contact Info */}
           <div className="space-y-8">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-                <Mail className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Email</h3>
-                <p className="text-muted-foreground">Available via contact form</p>
-              </div>
+            <div>
+              <h3 className="text-2xl font-bold text-white mb-6">Let's Connect</h3>
+              <p className="text-gray-300 text-lg leading-relaxed mb-8">
+                I'm always interested in discussing new opportunities,
+                innovative projects, or just having a conversation about
+                cybersecurity and technology.
+              </p>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                <MapPin className="h-6 w-6 text-white" />
+            <div className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-[#00d9ff]/10 rounded-lg">
+                  <Mail className="w-6 h-6 text-[#00d9ff]" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white">Email</h4>
+                  <p className="text-gray-400">Available via contact form</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Location</h3>
-                <p className="text-muted-foreground">Open to remote opportunities</p>
-              </div>
-            </div>
 
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center">
-                <Clock className="h-6 w-6 text-white" />
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-[#00d9ff]/10 rounded-lg">
+                  <MapPin className="w-6 h-6 text-[#00d9ff]" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white">Location</h4>
+                  <p className="text-gray-400">Gurugram, Haryana, India</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Response Time</h3>
-                <p className="text-muted-foreground">Within 24 hours</p>
-              </div>
-            </div>
 
-            {/* Social Links */}
-            <div className="pt-8">
-              <h3 className="text-lg font-semibold text-foreground mb-4">Connect With Me</h3>
-              <div className="flex space-x-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSocialClick("linkedin")}
-                  className="w-10 h-10 p-0"
-                >
-                  <Linkedin className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSocialClick("github")}
-                  className="w-10 h-10 p-0"
-                >
-                  <Github className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleSocialClick("twitter")}
-                  className="w-10 h-10 p-0"
-                >
-                  <Twitter className="h-4 w-4" />
-                </Button>
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-[#00d9ff]/10 rounded-lg">
+                  <Clock className="w-6 h-6 text-[#00d9ff]" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white">Response Time</h4>
+                  <p className="text-gray-400">Usually within 24 hours</p>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Contact Form */}
-          <Card className="bg-card border-border">
+          {/* Right Column - Contact Form */}
+          <Card className="bg-gray-800/30 border-gray-700">
             <CardContent className="p-8">
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {isSubmitted ? (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Send className="w-8 h-8 text-green-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    Message Sent Successfully!
+                  </h3>
+                  <p className="text-gray-400">
+                    Thank you for reaching out. I'll get back to you soon.
+                  </p>
+                  <Button
+                    onClick={() => setIsSubmitted(false)}
+                    variant="outline"
+                    className="mt-4 border-gray-600 text-gray-300 hover:border-[#00d9ff] hover:text-white"
+                  >
+                    Send Another Message
+                  </Button>
+                </div>
+              ) : (
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Name
+                      </label>
+                      <Input
+                        {...form.register("name")}
+                        placeholder="Your Name"
+                        className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-[#00d9ff]"
+                      />
+                      {form.formState.errors.name && (
+                        <p className="text-red-400 text-sm mt-1">
+                          {form.formState.errors.name.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Email
+                      </label>
+                      <Input
+                        {...form.register("email")}
+                        type="email"
+                        placeholder="your.email@example.com"
+                        className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-[#00d9ff]"
+                      />
+                      {form.formState.errors.email && (
+                        <p className="text-red-400 text-sm mt-1">
+                          {form.formState.errors.email.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
                   <div>
-                    <Label htmlFor="firstName" className="text-foreground font-medium">
-                      First Name
-                    </Label>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Subject
+                    </label>
                     <Input
-                      id="firstName"
-                      type="text"
-                      value={formData.firstName}
-                      onChange={(e) => handleInputChange("firstName", e.target.value)}
-                      placeholder="John"
-                      className={`mt-2 ${errors.firstName ? "border-destructive" : ""}`}
+                      {...form.register("subject")}
+                      placeholder="Project Inquiry"
+                      className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-[#00d9ff]"
                     />
-                    {errors.firstName && (
-                      <p className="text-destructive text-sm mt-1">{errors.firstName}</p>
+                    {form.formState.errors.subject && (
+                      <p className="text-red-400 text-sm mt-1">
+                        {form.formState.errors.subject.message}
+                      </p>
                     )}
                   </div>
+
                   <div>
-                    <Label htmlFor="lastName" className="text-foreground font-medium">
-                      Last Name
-                    </Label>
-                    <Input
-                      id="lastName"
-                      type="text"
-                      value={formData.lastName}
-                      onChange={(e) => handleInputChange("lastName", e.target.value)}
-                      placeholder="Doe"
-                      className={`mt-2 ${errors.lastName ? "border-destructive" : ""}`}
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Message
+                    </label>
+                    <Textarea
+                      {...form.register("message")}
+                      placeholder="Your message here..."
+                      rows={5}
+                      className="bg-gray-700/50 border-gray-600 text-white placeholder:text-gray-400 focus:border-[#00d9ff] resize-none"
                     />
-                    {errors.lastName && (
-                      <p className="text-destructive text-sm mt-1">{errors.lastName}</p>
+                    {form.formState.errors.message && (
+                      <p className="text-red-400 text-sm mt-1">
+                        {form.formState.errors.message.message}
+                      </p>
                     )}
                   </div>
-                </div>
 
-                <div>
-                  <Label htmlFor="email" className="text-foreground font-medium">
-                    Email
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder="john@example.com"
-                    className={`mt-2 ${errors.email ? "border-destructive" : ""}`}
-                  />
-                  {errors.email && (
-                    <p className="text-destructive text-sm mt-1">{errors.email}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="subject" className="text-foreground font-medium">
-                    Subject
-                  </Label>
-                  <Input
-                    id="subject"
-                    type="text"
-                    value={formData.subject}
-                    onChange={(e) => handleInputChange("subject", e.target.value)}
-                    placeholder="Project Discussion"
-                    className={`mt-2 ${errors.subject ? "border-destructive" : ""}`}
-                  />
-                  {errors.subject && (
-                    <p className="text-destructive text-sm mt-1">{errors.subject}</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="message" className="text-foreground font-medium">
-                    Message
-                  </Label>
-                  <Textarea
-                    id="message"
-                    value={formData.message}
-                    onChange={(e) => handleInputChange("message", e.target.value)}
-                    placeholder="Tell me about your project..."
-                    rows={6}
-                    className={`mt-2 resize-none ${errors.message ? "border-destructive" : ""}`}
-                  />
-                  {errors.message && (
-                    <p className="text-destructive text-sm mt-1">{errors.message}</p>
-                  )}
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={contactMutation.isPending}
-                >
-                  {contactMutation.isPending ? "Sending..." : "Send Message"}
-                </Button>
-              </form>
+                  <Button
+                    type="submit"
+                    disabled={contactMutation.isPending}
+                    className="w-full bg-[#00d9ff] hover:bg-[#00b8e6] text-black font-semibold py-3"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    {contactMutation.isPending ? "Sending..." : "Send Message"}
+                  </Button>
+                </form>
+              )}
             </CardContent>
           </Card>
         </div>
